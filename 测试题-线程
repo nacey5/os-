@@ -1,0 +1,139 @@
+数独谜题(Sudoku puzzle):
+项目包括设计一个多线程应用程序，以判定数独谜题的解决是否有效。
+这个多线程应用程序有多种不同设计：
+
+~~~java
+class Parameters {
+  int row;
+  int column;
+}
+
+class WorkerThread extends Thread {
+  private Parameters params;
+  private int[] results;
+  private int id;
+
+  public WorkerThread(Parameters params, int[] results, int id) {
+    this.params = params;
+    this.results = results;
+    this.id = id;
+  }
+
+  public void run() {
+    // Perform the task assigned to this worker thread
+    int result = checkValidity(params.row, params.column);
+
+    // Store the result in the results array
+    results[id] = result;
+  }
+
+  private int checkValidity(int row, int column) {
+    // Perform the validity check for the given row and column
+    // ...
+    return 1;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Parameters[] params = new Parameters[numWorkers];
+    int[] results = new int[numWorkers];
+
+    for (int i = 0; i < numWorkers; i++) {
+      params[i] = new Parameters();
+      params[i].row = i + 1;
+      params[i].column = i + 1;
+
+      WorkerThread worker = new WorkerThread(params[i], results, i);
+      worker.start();
+    }
+
+    // Wait for all worker threads to finish
+    for (int i = 0; i < numWorkers; i++) {
+      try {
+        worker[i].join();
+      } catch (InterruptedException e) {
+        // Handle the exception
+      }
+    }
+
+    // Check the results array to determine if the sudoku puzzle is valid
+    boolean isValid = true;
+    for (int i = 0; i < numWorkers; i++) {
+      if (results[i] == 0) {
+        isValid = false;
+        break;
+      }
+    }
+
+    if (isValid) {
+      System.out.println("The sudoku puzzle is valid.");
+    } else {
+      System.out.println("The sudoku puzzle is invalid.");
+    }
+  }
+}
+
+~~~
+
+~~~c
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_THREADS 9
+
+// 用于存储每个线程的结果
+int results[MAX_THREADS];
+
+// 用于存储参数
+struct parameters {
+    int row;
+    int column;
+};
+
+// 检查数独谜题的区域是否有效
+void *check_area(void *param) {
+    struct parameters *data = (struct parameters*) param;
+    int row = data->row;
+    int column = data->column;
+    int result = 0;
+    // 在这里进行检查，结果将存储在 result 中
+    results[row * 3 + column] = result;
+    return NULL;
+}
+
+int main(int argc, char *argv[]) {
+    pthread_t threads[MAX_THREADS];
+    struct parameters data[MAX_THREADS];
+    int i, j, index = 0;
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            data[index].row = i;
+            data[index].column = j;
+            // 创建线程
+            pthread_create(&threads[index], NULL, check_area, (void *) &data[index]);
+            index++;
+        }
+    }
+    // 等待所有线程完成
+    for (i = 0; i < MAX_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    // 检查结果数组，以判定数独谜题是否有效
+    int valid = 1;
+    for (i = 0; i < MAX_THREADS; i++) {
+        if (results[i] == 0) {
+            valid = 0;
+            break;
+        }
+    }
+    if (valid) {
+        printf("数独谜题有效\n");
+    } else {
+        printf("数独谜题无效\n");
+    }
+    return 0;
+}
+
+~~~
